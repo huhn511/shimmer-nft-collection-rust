@@ -3,3 +3,4 @@ walletdb
 .env
 wallet.stronghold
 drop.csv
+collection.json

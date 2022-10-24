@@ -1,0 +1,11 @@
+{
+  "standard": "IRC27",
+  "version": "v1.0",
+  "type": "image/png",
+  "uri": "https://robohash.org/",
+  "name": "Shimmer Test Robot",
+  "description": "The Shimmer Test Robot NFT Collection. Robots lovingly delivered by Robohash.org.",
+  "issuerName": "Alice",
+  "collectionId": "0x0400d736153340a7399b00b14e00c488a3a37785a2f0d034a4eb882bb7190cba",
+  "collectionName": "Shimmer Test Robot"
+}

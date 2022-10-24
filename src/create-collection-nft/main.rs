@@ -8,17 +8,60 @@
 use std::env;
 
 use dotenv::dotenv;
-use iota_wallet::{account_manager::AccountManager, NftOptions, Result, ClientOptions};
+use iota_wallet::{account_manager::AccountManager, ClientOptions, NftOptions, Result};
+use serde::{Deserialize, Serialize};
+use serde_json::Value;
+use std::fs::File;
+use std::io::Read;
+use std::path::Path;
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Collection {
+    standard: String,
+    version: String,
+    r#type: String,
+    uri: String,
+    name: String,
+    description: String,
+    issuerName: String,
+    collectionId: String,
+    collectionName: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct CollectionNFT {
+    standard: String,
+    version: String,
+    r#type: String,
+    uri: String,
+    description: String,
+    issuerName: String,
+    collectionName: String,
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
     // This example uses dotenv, which is not safe for use in production
     dotenv().ok();
 
+    // JSON COLLECTION STUFF
+    let json_file_path = Path::new("collection.json");
+    // let file = File::open(json_file_path);
+    // let mut file = File::open(&json_file_path).expect("Error opening File");
+    let mut file = File::open(&json_file_path).unwrap();
+    let mut data = String::new();
+    file.read_to_string(&mut data).unwrap();
+
+    // let collection:Collection = serde_json::from_reader(file).expect("e");
+    let collection: CollectionNFT = serde_json::from_str(&data).expect("JSON was not well-formatted");
+
+    println!("{:?}", collection);
+    // JSON COLLECTION STUFF END
+
     // Create the account manager
-    let manager = AccountManager::builder()
-        .finish()
-        .await?;
+    let manager = AccountManager::builder().finish().await?;
     // Get the account we generated with `01_create_wallet`
     let account = manager.get_account("Alice").await?;
     account.sync(None).await?;
@@ -29,7 +72,10 @@ async fn main() -> Result<()> {
     let nft_options = vec![NftOptions {
         address: None,
         immutable_metadata: Some(
-            b"This NFT will be the issuer from the awesome NFT collection".to_vec(),
+            serde_json::to_string(&collection)
+                .unwrap()
+                .as_bytes()
+                .to_vec(),
         ),
         issuer: None,
         metadata: None,
@@ -39,11 +85,9 @@ async fn main() -> Result<()> {
 
     let transaction = account.mint_nfts(nft_options, None).await?;
 
-    println!("Transaction: {}.", transaction.transaction_id,);
     println!(
-        "Block sent: {}/api/core/v2/blocks/{}.",
-        &env::var("NODE_URL").unwrap(),
-        transaction.block_id.expect("no block created yet")
+        "https://explorer.shimmer.network/testnet/transaction/{}.",
+        transaction.transaction_id,
     );
 
     Ok(())
